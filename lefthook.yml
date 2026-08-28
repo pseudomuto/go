@@ -1,0 +1,6 @@
+# Refer for explanation to following link:
+# https://lefthook.dev/configuration/
+pre-push:
+  jobs:
+    - name: lint
+      run: mise run lint

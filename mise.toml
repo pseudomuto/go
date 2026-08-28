@@ -1,0 +1,29 @@
+[settings]
+lockfile = true
+
+[tools]
+go = "1.26"
+golangci-lint = "2.13"
+lefthook = "2.1"
+
+# A fresh clone gets working git hooks from `mise install` alone. Note this
+# requires `mise trust` first, since mise refuses to run hooks from an
+# untrusted config.
+[hooks]
+postinstall = "lefthook install"
+
+[tasks.test]
+description = "Run the tests"
+run = "go test -race -cover ./..."
+
+[tasks."test:ci"]
+description = "Run the test verbose with codecov"
+run = "go test -race -v -coverprofile=coverage.out ./..."
+
+[tasks.lint]
+description = "Lint Go files"
+run = "golangci-lint run ./..."
+
+[tasks.format]
+description = "Format Go files"
+run = ["go fix ./...", "golangci-lint fmt"]
