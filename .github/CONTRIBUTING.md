@@ -29,6 +29,7 @@ If `mise install` skipped the hooks, you forgot `mise trust`. Run it and install
 | `mise run lint`    | `golangci-lint run ./...`                                |
 | `mise run format`  | `go fix ./...` then `golangci-lint fmt`                  |
 | `mise run test:ci` | What CI runs. Writes `coverage.out`, which is gitignored |
+| `mise run build`   | goreleaser snapshot. Writes `dist/`, which is gitignored |
 
 ## Before you open a PR
 
@@ -162,8 +163,9 @@ sequence can be ranged over twice".
 
 ## CI
 
-Two jobs on every PR against `main`, and on every push to `main`: `test` and `lint`, each capped at 5 minutes. Both run
-the same mise tasks you run locally, so a green local run should mean a green CI run.
+Three jobs on every PR against `main`, and on every push to `main`: `build`, `test` and `lint`, each capped at 5
+minutes. All three run the same mise tasks you run locally, so a green local run should mean a green CI run. `build` is
+the goreleaser snapshot, which catches a broken `.goreleaser.yaml` on the PR rather than halfway through a release.
 
 Coverage goes to Codecov. GitHub Actions are pinned to commit SHAs with the version in a trailing comment; if you bump
 one, update both.
