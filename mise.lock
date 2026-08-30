@@ -82,6 +82,53 @@ url = "https://github.com/golangci/golangci-lint/releases/download/v2.13.1/golan
 url_api = "https://api.github.com/repos/golangci/golangci-lint/releases/assets/522396821"
 provenance = "github-attestations"
 
+[[tools.goreleaser]]
+version = "2.18.0"
+backend = "aqua:goreleaser/goreleaser"
+specifiers = ["2.18"]
+
+[tools.goreleaser."platforms.linux-arm64"]
+checksum = "sha256:1975566c9668e6f4247e6bb57656f21da13635c24d948ef47b1232e5c864a35b"
+url = "https://github.com/goreleaser/goreleaser/releases/download/v2.18.0/goreleaser_Linux_arm64.tar.gz"
+url_api = "https://api.github.com/repos/goreleaser/goreleaser/releases/assets/526873789"
+provenance = "github-attestations"
+
+[tools.goreleaser."platforms.linux-arm64-musl"]
+checksum = "sha256:1975566c9668e6f4247e6bb57656f21da13635c24d948ef47b1232e5c864a35b"
+url = "https://github.com/goreleaser/goreleaser/releases/download/v2.18.0/goreleaser_Linux_arm64.tar.gz"
+url_api = "https://api.github.com/repos/goreleaser/goreleaser/releases/assets/526873789"
+provenance = "github-attestations"
+
+[tools.goreleaser."platforms.linux-x64"]
+checksum = "sha256:41cdf49b653784b03a08013dd99e382cd5d463049e915c2d818eaed182ae6197"
+url = "https://github.com/goreleaser/goreleaser/releases/download/v2.18.0/goreleaser_Linux_x86_64.tar.gz"
+url_api = "https://api.github.com/repos/goreleaser/goreleaser/releases/assets/526873785"
+provenance = "github-attestations"
+
+[tools.goreleaser."platforms.linux-x64-musl"]
+checksum = "sha256:41cdf49b653784b03a08013dd99e382cd5d463049e915c2d818eaed182ae6197"
+url = "https://github.com/goreleaser/goreleaser/releases/download/v2.18.0/goreleaser_Linux_x86_64.tar.gz"
+url_api = "https://api.github.com/repos/goreleaser/goreleaser/releases/assets/526873785"
+provenance = "github-attestations"
+
+[tools.goreleaser."platforms.macos-arm64"]
+checksum = "sha256:285abb188274f3eebffb97fcd17a7d25f109fe33e234597c393e78e869386d5c"
+url = "https://github.com/goreleaser/goreleaser/releases/download/v2.18.0/goreleaser_Darwin_all.tar.gz"
+url_api = "https://api.github.com/repos/goreleaser/goreleaser/releases/assets/526873866"
+provenance = "github-attestations"
+
+[tools.goreleaser."platforms.macos-x64"]
+checksum = "sha256:285abb188274f3eebffb97fcd17a7d25f109fe33e234597c393e78e869386d5c"
+url = "https://github.com/goreleaser/goreleaser/releases/download/v2.18.0/goreleaser_Darwin_all.tar.gz"
+url_api = "https://api.github.com/repos/goreleaser/goreleaser/releases/assets/526873866"
+provenance = "github-attestations"
+
+[tools.goreleaser."platforms.windows-x64"]
+checksum = "sha256:cbd0aeab833806b6c07e2d156c2c9baaffa6e3d1fb870071bf3efc9d9e5b4777"
+url = "https://github.com/goreleaser/goreleaser/releases/download/v2.18.0/goreleaser_Windows_x86_64.zip"
+url_api = "https://api.github.com/repos/goreleaser/goreleaser/releases/assets/526873786"
+provenance = "github-attestations"
+
 [[tools.lefthook]]
 version = "2.1.10"
 backend = "aqua:evilmartians/lefthook"
@@ -128,3 +175,50 @@ checksum = "sha256:beabbce824641ae71229ed11dd8634f47148921cb649d25c90441b7374814
 url = "https://github.com/evilmartians/lefthook/releases/download/v2.1.10/lefthook_2.1.10_Windows_x86_64.gz"
 url_api = "https://api.github.com/repos/evilmartians/lefthook/releases/assets/470227505"
 provenance = "github-attestations"
+
+[[tools.svu]]
+version = "3.4.1"
+backend = "aqua:caarlos0/svu"
+specifiers = ["3.4"]
+
+[tools.svu."platforms.linux-arm64"]
+checksum = "sha256:801f310be2f91df86868a2de1f61fefaf06e3eb773431be7dde9765ecde4d21c"
+url = "https://github.com/caarlos0/svu/releases/download/v3.4.1/svu_3.4.1_linux_arm64.tar.gz"
+url_api = "https://api.github.com/repos/caarlos0/svu/releases/assets/410001856"
+provenance = "cosign"
+
+[tools.svu."platforms.linux-arm64-musl"]
+checksum = "sha256:801f310be2f91df86868a2de1f61fefaf06e3eb773431be7dde9765ecde4d21c"
+url = "https://github.com/caarlos0/svu/releases/download/v3.4.1/svu_3.4.1_linux_arm64.tar.gz"
+url_api = "https://api.github.com/repos/caarlos0/svu/releases/assets/410001856"
+provenance = "cosign"
+
+[tools.svu."platforms.linux-x64"]
+checksum = "sha256:7ee8c91998c15109130638dc661a912d5f426e2f8642f6f6c04e6502be920770"
+url = "https://github.com/caarlos0/svu/releases/download/v3.4.1/svu_3.4.1_linux_amd64.tar.gz"
+url_api = "https://api.github.com/repos/caarlos0/svu/releases/assets/410001859"
+provenance = "cosign"
+
+[tools.svu."platforms.linux-x64-musl"]
+checksum = "sha256:7ee8c91998c15109130638dc661a912d5f426e2f8642f6f6c04e6502be920770"
+url = "https://github.com/caarlos0/svu/releases/download/v3.4.1/svu_3.4.1_linux_amd64.tar.gz"
+url_api = "https://api.github.com/repos/caarlos0/svu/releases/assets/410001859"
+provenance = "cosign"
+
+[tools.svu."platforms.macos-arm64"]
+checksum = "sha256:aeec0a735f12d6313c5b4f295ac2f86e00b56571d241abe5aa0306b41f43efd7"
+url = "https://github.com/caarlos0/svu/releases/download/v3.4.1/svu_3.4.1_darwin_all.tar.gz"
+url_api = "https://api.github.com/repos/caarlos0/svu/releases/assets/410001878"
+provenance = "cosign"
+
+[tools.svu."platforms.macos-x64"]
+checksum = "sha256:aeec0a735f12d6313c5b4f295ac2f86e00b56571d241abe5aa0306b41f43efd7"
+url = "https://github.com/caarlos0/svu/releases/download/v3.4.1/svu_3.4.1_darwin_all.tar.gz"
+url_api = "https://api.github.com/repos/caarlos0/svu/releases/assets/410001878"
+provenance = "cosign"
+
+[tools.svu."platforms.windows-x64"]
+checksum = "sha256:7f8d17beb8fbe4a5c6e232072e93a71c8338173dafd95eda898bd1838d12b14e"
+url = "https://github.com/caarlos0/svu/releases/download/v3.4.1/svu_3.4.1_windows_amd64.zip"
+url_api = "https://api.github.com/repos/caarlos0/svu/releases/assets/410001860"
+provenance = "cosign"
