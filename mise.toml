@@ -2,7 +2,7 @@
 lockfile = true
 
 [tools]
-go = "1.26"
+go = "1.27"
 golangci-lint = "2.13"
 lefthook = "2.1"
 
