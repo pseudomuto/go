@@ -1,0 +1,42 @@
+version: 2
+
+project_name: go
+
+builds:
+  - skip: true
+
+archives:
+  - id: default
+    ids:
+      - go
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: "checksums.txt"
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  use: github-native
+
+release:
+  github:
+    owner: pseudomuto
+    name: go
+  draft: false
+  prerelease: auto
+  name_template: "Release {{ .Version }}"
+  header: |
+    ## go - A collection of small, self-contained packages for Go applications.
+
+    ### Get it!
+
+    `go get github.com/pseudomuto/go`
+
+  footer: |
+    **Full Changelog**: https://github.com/pseudomuto/go/compare/{{ .PreviousTag }}...{{ .Tag }}

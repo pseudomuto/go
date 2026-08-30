@@ -167,3 +167,52 @@ the same mise tasks you run locally, so a green local run should mean a green CI
 
 Coverage goes to Codecov. GitHub Actions are pinned to commit SHAs with the version in a trailing comment; if you bump
 one, update both.
+
+## Cutting a release
+
+Releases are manual and need write access. In the Actions tab, pick the **release** workflow, run it against `main`, and
+choose a bump:
+
+| Bump    | What it does                                            |
+| ------- | ------------------------------------------------------- |
+| `auto`  | `svu next --always` picks the bump from the commit log  |
+| `patch` | `svu patch`                                             |
+| `minor` | `svu minor`                                             |
+| `major` | `svu major`                                             |
+
+The workflow resolves the version, creates and pushes an annotated tag, then hands off to goreleaser. Do not tag by
+hand. The tag is the workflow's output, and tagging out of band leaves the two out of step.
+
+### What `auto` reads
+
+`svu next` walks the commits since the last tag and maps conventional commit prefixes onto a bump:
+
+| Commit                                   | Bump  |
+| ---------------------------------------- | ----- |
+| `feat:`                                  | minor |
+| `fix:`                                   | patch |
+| `feat!:` or a `BREAKING CHANGE:` trailer | major |
+| anything else (`build:`, `docs:`, ...)   | none  |
+
+`--always` turns that last row into a patch bump, so a release carrying only chores still gets a version instead of
+reusing the current one. Nothing enforces the prefixes at commit time, so `auto` is only as honest as the log. Run `svu
+current` and `svu next` locally first if you want to see what it will pick.
+
+This module is still on `v0`, and `auto` will happily take a breaking change to `v1.0.0`. Choose the bump explicitly if
+that is not what you meant.
+
+### What ends up in the release
+
+A GitHub release, with a changelog GitHub generates from the commits in range, and no attached files. This is a library,
+so `go get` is the install path and there is nothing to download. `mise run build` runs goreleaser locally in snapshot
+mode if you want to watch the config execute without publishing anything.
+
+### If the release job fails
+
+The tag is pushed before goreleaser runs, so a mid-job failure can leave a tag behind with no release attached, and
+re-running the workflow will then fail on the tag already existing. Clear it and start over:
+
+```bash
+git push --delete origin vX.Y.Z
+git tag -d vX.Y.Z
+```

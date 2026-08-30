@@ -4,13 +4,19 @@ lockfile = true
 [tools]
 go = "1.27"
 golangci-lint = "2.13"
+goreleaser = "2.18"
 lefthook = "2.1"
+svu = "3.4"
 
 # A fresh clone gets working git hooks from `mise install` alone. Note this
 # requires `mise trust` first, since mise refuses to run hooks from an
 # untrusted config.
 [hooks]
 postinstall = "lefthook install"
+
+[tasks.build]
+description = "Build snapshot"
+run = "goreleaser release --snapshot --clean --skip=publish"
 
 [tasks.test]
 description = "Run the tests"
