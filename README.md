@@ -16,7 +16,7 @@ turns out to be (whatever I deem) worth reusing across projects, and each new pa
 go get github.com/pseudomuto/go
 ```
 
-Requires Go 1.26.5 or later, per `go.mod`.
+Requires Go 1.27 or later, per `go.mod`. The `chain` package needs 1.27 specifically, for methods with type parameters.
 
 ## Getting started
 
@@ -55,9 +55,10 @@ unique := slices.UniqBy(users, func(u User) string { return u.Name })
 
 ## Packages
 
-What is here today. These three form one family, with a rule for where things go: `seq` holds the lazy adapters over
-`iter.Seq`, while `slices` and `maps` hold anything with a slice or a map on either side. The dependency runs one way,
-so `slices` and `maps` import `seq` and never the reverse.
+What is here today. `seq`, `slices` and `maps` form one family with a rule for where things go: `seq` holds the lazy
+adapters over `iter.Seq`, while `slices` and `maps` hold anything with a slice or a map on either side. The dependency
+runs one way, so `slices` and `maps` import `seq` and never the reverse. `chain` puts the same helpers on the containers
+themselves, as methods.
 
 ### seq
 
@@ -104,10 +105,58 @@ pulling from its source the moment the consumer stops.
 `Reduce` hands each entry to its callback as an `Entry{Key, Value}` rather than as two positional arguments, so a
 `map[string]string` callback cannot silently transpose them.
 
+### chain
+
+The same helpers as the three packages above, hung on the containers themselves as methods, for when the nesting gets
+awkward.
+
+```go
+total := chain.OfMap(m).
+	Filter(isActive).
+	SortedKeys().          // -> chain.Slice[K]
+	Map(strings.ToUpper).
+	Seq().                 // -> chain.Seq[K]
+	Reduce("", concat)
+```
+
+`Slice` is defined as `[]T` and `Map` as `map[K]V`, so they _are_ the containers. Index them, take their `len`, range
+over them, and pass them anywhere a plain slice or map is expected, with no unwrapping:
+
+```go
+got := chain.OfMap(raw).Filter(isActive).SortedKeys()
+
+fmt.Println(len(got), got[0])
+var plain []string = got
+```
+
+`Seq` is the exception: it and `iter.Seq` are both named types, so it needs an explicit conversion in each direction.
+`OfSeq` and `Seq.Unwrap` are those conversions. Ranging over a `Seq` directly works either way.
+
+`chain` adds no behaviour of its own. Every method is a one-line delegation, so the contracts below still hold.
+
+Because Go 1.27 lets methods declare type parameters, the chain does not break at a type change. `Map` may return a
+different element type and `Reduce` takes any accumulator, so a whole pipeline stays in one expression:
+
+```go
+report := chain.OfMap(users).
+	Filter(isActive).
+	SortedKeys().                                  // -> Slice[string]
+	Map(func(k string) User { return lookup(k) }). // -> Slice[User]
+	UniqBy(func(u User) string { return u.Email }).
+	Reduce(Summary{}, addRow)                      // -> Summary
+```
+
+> [!NOTE]
+>
+> What a method still cannot do is add a constraint its receiver lacks. `Slice` and `Seq` leave their element type
+> unconstrained so they can hold anything, so there is no zero-argument `Uniq`: pass `chain.Identity` to `UniqBy` to
+> dedupe on the values themselves. Likewise no comparator-free `Sort`, since that needs `cmp.Ordered`. The package doc
+> lists the full set.
+
 ## Design notes
 
-Contracts for the three packages above, worth knowing before you reach for something. They are not module-wide rules:
-anything added later states its own contracts in its package doc.
+Contracts for `seq`, `slices` and `maps`, worth knowing before you reach for something. `chain` delegates to them, so
+they hold there too. They are not module-wide rules: anything added later states its own contracts in its package doc.
 
 **Laziness.** Every `seq` adapter is lazy and composes without buffering, so values flow through a whole chain one at a
 time. Callbacks run once per value pulled, and not at all if the sequence is never consumed. `Reduce` is the exception:

@@ -86,13 +86,14 @@ needing an import alias wherever a file wants both. Do not add a third unless th
 
 ## The collections packages
 
-`seq`, `slices`, and `maps` are one family, and they have a placement rule of their own:
+`seq`, `slices`, `maps` and `chain` are one family, and they have a placement rule of their own:
 
 | Package  | Owns                                                   |
 | -------- | ------------------------------------------------------ |
 | `seq`    | Lazy adapters over `iter.Seq`. Seq in, Seq or Seq2 out |
 | `slices` | Anything with a slice on either side                   |
 | `maps`   | Anything with a map on either side                     |
+| `chain`  | The other three's helpers, as methods on the containers |
 
 The dependency runs one way. `slices` and `maps` import `seq`; `seq` imports neither. Keep it that way or you get an
 import cycle the first time someone adds a conversion.
@@ -118,6 +119,29 @@ as the consumer stops. Callbacks run once per value pulled. `Reduce` is the one 
 through, so their results are only safe to treat as a set. Everything else imposes an order, walking the map in
 ascending key order, which is why those take `cmp.Ordered` keys rather than merely `comparable` ones. If you add a
 function whose result depends on order, sort; do not hand back a value that differs between runs.
+
+**`chain` adds no algorithms.** Every method is a one-line delegation to an exported function in `seq`, `slices`, `maps`
+or the standard library. If a method would need new logic, that function belongs in the container package first, as its
+own change. This is mechanically checkable: no method body in `chain` should contain a `for`, an `if`, or more than one
+statement.
+
+**`chain` never returns a randomly ordered slice.** Materialising map order into a slice is the nondeterminism the
+`maps` package was fixed to avoid, so the map-to-slice crossing is offered only in sorted form. Sequences are exempt,
+since an `iter.Seq` is unordered by definition.
+
+**`chain` types are defined types, not structs.** `Slice` is `[]T` and `Map` is `map[K]V`, so they are indexable,
+rangeable and assignable to the plain containers with no conversion. That is why they have no `Unwrap` or `Len`. `Seq`
+is the exception: it and `iter.Seq` are both named, so it needs an explicit conversion, which `OfSeq` and `Seq.Unwrap`
+provide. They cannot be aliases, because an alias cannot have methods.
+
+**`chain` needs Go 1.27.** Methods with type parameters landed there, which is what lets `Map` change the element type
+and `Reduce` take any accumulator. Note the linter has to match: `golangci-lint` built against Go 1.26 refuses a module
+targeting 1.27 outright, so run it through `mise` rather than whatever is on your `PATH`.
+
+**Methods still cannot add a constraint the receiver lacks.** That is why there is no zero-argument `Uniq` (use
+`UniqBy` with `chain.Identity`), no comparator-free `Sort`, and why `chain.Map` requires ordered keys. If you find
+yourself wanting one of those, it is a language limit rather than an oversight. `chain/doc.go` explains it with the
+exact compiler errors, and is the place to point people.
 
 ## Testing conventions
 
