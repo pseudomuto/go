@@ -7,8 +7,9 @@
 A collection of small, self-contained packages for Go applications. Each is independent, so you import only what you
 need.
 
-Today that means helpers for iterators, slices, and maps. The module is not limited to those: it is a home for whatever
-turns out to be (whatever I deem) worth reusing across projects, and each new package gets its own top-level directory.
+Today that means helpers for iterators, slices and maps, plus a validation package. The module is not limited to those:
+it is a home for whatever turns out to be (whatever I deem) worth reusing across projects, and each new package gets its
+own top-level directory.
 
 ## Install
 
@@ -59,6 +60,8 @@ What is here today. `seq`, `slices` and `maps` form one family with a rule for w
 adapters over `iter.Seq`, while `slices` and `maps` hold anything with a slice or a map on either side. The dependency
 runs one way, so `slices` and `maps` import `seq` and never the reverse. `chain` puts the same helpers on the containers
 themselves, as methods.
+
+`validate` stands on its own and shares nothing with those four.
 
 ### seq
 
@@ -153,10 +156,79 @@ report := chain.OfMap(users).
 > dedupe on the values themselves. Likewise no comparator-free `Sort`, since that needs `cmp.Ordered`. The package doc
 > lists the full set.
 
+### validate
+
+Declarative struct validation with no reflection. You name the field and hand over its value, so there are no struct
+tags to parse, nothing is looked up by name at runtime, and a check that does not fit the field's type is a compile
+error.
+
+```go
+func (u User) Validate() error {
+	return validate.Validate("user",
+		validate.Field("name", u.Name, validate.Required[string]()),
+		validate.Field("age", u.Age, validate.GTE(0), validate.LT(150)),
+		validate.Nested("address", u.Address),
+		validate.When(u.Notify,
+			validate.Field("email", u.Email, validate.Required[string]()),
+		),
+	)
+}
+
+// user.name: is required
+// user.age: not less than 150
+// user.address.street: is required
+// user.email: is required
+```
+
+A `Check` is any `func(T) error`. A `Rule` binds values to checks, and `Validate` runs rules and returns nil, or an
+`Errors` holding one `Error` per failure.
+
+| Rule              | What it does                                                          |
+| ----------------- | --------------------------------------------------------------------- |
+| `Field`           | Binds a name and a value to the checks it has to pass                 |
+| `Group`           | Nests a set of rules under a name                                     |
+| `Nested`          | Hands a value to its own `Validate` method                            |
+| `Each`            | Applies a rule to every element of a slice, under a `name[i]` segment |
+| `EachNested`      | `Each` plus `Nested`, for a slice whose elements validate themselves  |
+| `When` / `Unless` | Guards rules behind a condition                                       |
+| `WhenFunc`        | `When`, but the rule is only built if the condition holds             |
+
+| Check                              | What it does                                                           |
+| ---------------------------------- | ---------------------------------------------------------------------- |
+| `Required`                         | Rejects the zero value                                                 |
+| `GT` / `GTE` / `LT` / `LTE`        | Compares against a bound                                               |
+| `Unique`                           | Rejects a slice holding the same value twice                           |
+| `IsIP` / `IsIPv4` / `IsIPv6`       | Parses as an IP address, optionally pinned to one family               |
+| `IsCIDR` / `IsCIDRv4` / `IsCIDRv6` | Parses as a CIDR prefix; the `vN` forms also require a network address |
+
+Every failure carries a path, built by prepending one segment per level as it travels back out. Nothing is
+special-cased, which is what makes it predictable:
+
+```
+a check reports          is required
+Field("street", ...)     street: is required
+Group("address", ...)    address.street: is required
+Validate("user", ...)    user.address.street: is required
+```
+
+`Errors` is a list, not a string. It unwraps to its elements, so `errors.As` reaches either the whole list or a single
+`Error`, and each one exposes its path separately from its message. Callers that attach failures to form inputs never
+have to parse anything:
+
+```go
+var verrs validate.Errors
+if errors.As(err, &verrs) {
+	for _, e := range verrs {
+		fmt.Println(e.Path(), "->", e.Error())
+	}
+}
+```
+
 ## Design notes
 
 Contracts for `seq`, `slices` and `maps`, worth knowing before you reach for something. `chain` delegates to them, so
-they hold there too. They are not module-wide rules: anything added later states its own contracts in its package doc.
+they hold there too. They are not module-wide rules: `validate` states its own in its package doc, as will anything
+added later.
 
 **Laziness.** Every `seq` adapter is lazy and composes without buffering, so values flow through a whole chain one at a
 time. Callbacks run once per value pulled, and not at all if the sequence is never consumed. `Reduce` is the exception:

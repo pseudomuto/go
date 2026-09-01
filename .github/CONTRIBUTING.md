@@ -57,20 +57,21 @@ the root, with its own `doc.go` and its own tests. There is no shared `internal`
 deliberate decision rather than a convenience.
 
 Every package states its contracts in its own package doc. The conventions below are split the same way: what holds
-everywhere, then what belongs to the collections packages that happen to be here today.
+everywhere, then what belongs to the collections packages, then what belongs to `validate`.
 
 ## Conventions for every package
 
 **Naming suffixes.** These mean specific things, and are worth keeping consistent across packages:
 
-| Suffix | The caller supplies      | Example                       |
-| ------ | ------------------------ | ----------------------------- |
-| `Err`  | A callback that can fail | `seq.MapErr`, `slices.MapErr` |
-| `By`   | A key extractor          | `seq.UniqBy(s, key)`          |
-| `Func` | A comparator             | `maps.SortedKeysFunc`         |
+| Suffix | The caller supplies                                          | Example                                    |
+| ------ | ------------------------------------------------------------ | ------------------------------------------ |
+| `Err`  | A callback that can fail                                     | `seq.MapErr`, `slices.MapErr`              |
+| `By`   | A key extractor                                              | `seq.UniqBy(s, key)`                       |
+| `Func` | A function the base form does not take, usually a comparator | `maps.SortedKeysFunc`, `validate.WhenFunc` |
 
-`By` and `Func` are not interchangeable. Standard library `*Func` variants take comparators, so using `Func` for a key
-extractor will mislead people.
+`By` and `Func` are not interchangeable. A key extractor always takes `By`: the standard library's sorting family reads
+`Func` as a comparator, so using it there will mislead people. `Func` is the fallback for anything else the caller hands
+over, like the rule builder in `validate.WhenFunc`.
 
 **The package doc carries the contracts.** Anything a caller could get wrong belongs there: what is lazy, what
 allocates, what order results arrive in, what happens on empty input. If you add something that breaks a stated
@@ -144,6 +145,29 @@ targeting 1.27 outright, so run it through `mise` rather than whatever is on you
 yourself wanting one of those, it is a language limit rather than an oversight. `chain/doc.go` explains it with the
 exact compiler errors, and is the place to point people.
 
+## The `validate` package
+
+`validate` is unrelated to the four above and imports none of them. Its premise is that everything is spelled out at the
+call site, which makes a few things load-bearing:
+
+**No reflection, ever.** The field name and the value both arrive as arguments. That is what makes a mismatched check a
+compile error and what keeps struct tags out of it. Needing `reflect` is a change to the premise rather than an
+implementation detail, so raise it before writing it.
+
+**Paths compose by prepending, one segment per level.** Segments accumulate and never merge or replace one another, so
+two levels that pick the same name both appear, and an empty name contributes nothing. Do not add a case that collapses
+or rewrites a segment, however much nicer the output looks. The predictability is the feature.
+
+**New rule constructors should be sugar.** `Validate` is a `Group` at the root, `EachNested` is `Each` plus `Nested`,
+and `When` is a `Group` handed no rules. Before writing a constructor that loops over `Errors` itself, check whether
+composing the existing ones gets you there.
+
+**Check messages complete the sentence "<field> ...".** `"is required"` and `"not greater than 0"`, never
+`"name is required"`. `Field` supplies the name, so a message that repeats it reads doubled.
+
+**Nothing short-circuits.** Every rule runs and every check within a rule runs, so one call reports every problem rather
+than the first. A false `When` drops the rules it guards and nothing else.
+
 ## Testing conventions
 
 - One test file per source file, named after it. `filter.go` gets `filter_test.go`
@@ -153,6 +177,8 @@ exact compiler errors, and is the place to point people.
 - testify `require`, not `assert`, and build it from the subtest's own `t`
 - `Example` functions are tests. They run in CI, so their `// Output:` has to be right
 - Where output order is randomized, sort before comparing, or assert a count
+- Fixtures and helpers shared by several of a package's test files live in one of them rather than being duplicated.
+  `validate` keeps its structs and `pathsOf` in `validate_test.go`
 
 Assertion messages are worth writing. `"the result shares a backing array with the input"` tells the next person what
 broke; a bare failed comparison does not.
