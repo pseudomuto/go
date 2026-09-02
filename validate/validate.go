@@ -18,9 +18,10 @@ type (
 	//		return nil
 	//	}
 	//
-	// The constructors in this package ([Required], [GT], [IsCIDR], and the rest)
-	// return one. They are constructors rather than checks themselves so they can
-	// close over a bound, and so their type parameter is inferred from that bound.
+	// The constructors in this package ([Required], [GT], and the rest) return one,
+	// as do those in the is subpackage. They are constructors rather than checks
+	// themselves so they can close over a bound, and so their type parameter is
+	// inferred from that bound.
 	//
 	// A Check that wants to place its failure more precisely than "this field" can
 	// return an [Error] or an [Errors] instead of a plain error; see [Fail].

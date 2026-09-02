@@ -1,4 +1,4 @@
-package validate_test
+package is_test
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/pseudomuto/go/validate"
+	"github.com/pseudomuto/go/validate/is"
 )
 
 // The messages under test, named so the tables below stay readable and a
@@ -20,7 +21,7 @@ const (
 	notIPv6   = "is not a valid IPv6 address"
 )
 
-func TestIsCIDR(t *testing.T) {
+func TestCIDR(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -47,12 +48,12 @@ func TestIsCIDR(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			requireCheck(t, validate.IsCIDR(), tt.in, tt.wantErr)
+			requireCheck(t, is.CIDR(), tt.in, tt.wantErr)
 		})
 	}
 }
 
-func TestIsCIDRv4(t *testing.T) {
+func TestCIDRv4(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -78,12 +79,12 @@ func TestIsCIDRv4(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			requireCheck(t, validate.IsCIDRv4(), tt.in, tt.wantErr)
+			requireCheck(t, is.CIDRv4(), tt.in, tt.wantErr)
 		})
 	}
 }
 
-func TestIsCIDRv6(t *testing.T) {
+func TestCIDRv6(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -107,25 +108,25 @@ func TestIsCIDRv6(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			requireCheck(t, validate.IsCIDRv6(), tt.in, tt.wantErr)
+			requireCheck(t, is.CIDRv6(), tt.in, tt.wantErr)
 		})
 	}
 }
 
-// The documented difference between IsCIDR and the two family checks is that
+// The documented difference between CIDR and the two family checks is that
 // only the latter insist on a network address. Pin that down as one statement
 // rather than leaving it implied by three tables.
-func TestCIDRFamilyChecksRejectHostBitsThatIsCIDRAllows(t *testing.T) {
+func TestCIDRFamilyChecksRejectHostBitsThatCIDRAllows(t *testing.T) {
 	t.Parallel()
 
 	for _, in := range []string{"10.0.0.5/24", "2001:db8::1/32"} {
-		require.NoError(t, validate.IsCIDR()(in), "IsCIDR should not care about host bits")
-		require.Error(t, validate.IsCIDRv4()(in))
-		require.Error(t, validate.IsCIDRv6()(in))
+		require.NoError(t, is.CIDR()(in), "CIDR should not care about host bits")
+		require.Error(t, is.CIDRv4()(in))
+		require.Error(t, is.CIDRv6()(in))
 	}
 }
 
-func TestIsIP(t *testing.T) {
+func TestIP(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -152,12 +153,12 @@ func TestIsIP(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			requireCheck(t, validate.IsIP(), tt.in, tt.wantErr)
+			requireCheck(t, is.IP(), tt.in, tt.wantErr)
 		})
 	}
 }
 
-func TestIsIPv4(t *testing.T) {
+func TestIPv4(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -180,12 +181,12 @@ func TestIsIPv4(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			requireCheck(t, validate.IsIPv4(), tt.in, tt.wantErr)
+			requireCheck(t, is.IPv4(), tt.in, tt.wantErr)
 		})
 	}
 }
 
-func TestIsIPv6(t *testing.T) {
+func TestIPv6(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -208,89 +209,106 @@ func TestIsIPv6(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			requireCheck(t, validate.IsIPv6(), tt.in, tt.wantErr)
+			requireCheck(t, is.IPv6(), tt.in, tt.wantErr)
 		})
 	}
 }
 
-// IsIPv4 and IsIPv6 are documented as complements over everything IsIP accepts,
+// IPv4 and IPv6 are documented as complements over everything IP accepts,
 // which only holds if the v4-mapped case lands on exactly one side.
-func TestIPFamilyChecksPartitionIsIP(t *testing.T) {
+func TestIPFamilyChecksPartitionIP(t *testing.T) {
 	t.Parallel()
 
 	accepted := []string{"10.0.0.1", "0.0.0.0", "255.255.255.255", "2001:db8::1", "::1", "::", "::ffff:10.0.0.1"}
 
 	for _, in := range accepted {
-		require.NoError(t, validate.IsIP()(in), "IsIP rejected %q, so the rest of this says nothing", in)
+		require.NoError(t, is.IP()(in), "IP rejected %q, so the rest of this says nothing", in)
 
-		isV4 := validate.IsIPv4()(in) == nil
-		isV6 := validate.IsIPv6()(in) == nil
+		isV4 := is.IPv4()(in) == nil
+		isV6 := is.IPv6()(in) == nil
 
 		require.NotEqual(t, isV4, isV6, "%q is either both families or neither", in)
 	}
 
-	// And neither family accepts what IsIP rejects.
+	// And neither family accepts what IP rejects.
 	for _, in := range []string{"", "nope", "10.0.0.0/8"} {
-		require.Error(t, validate.IsIP()(in))
-		require.Error(t, validate.IsIPv4()(in))
-		require.Error(t, validate.IsIPv6()(in))
+		require.Error(t, is.IP()(in))
+		require.Error(t, is.IPv4()(in))
+		require.Error(t, is.IPv6()(in))
 	}
 }
 
-func ExampleIsCIDR() {
-	fmt.Println(validate.IsCIDR()("10.0.0.0/8"))
-	fmt.Println(validate.IsCIDR()("10.0.0.5/24")) // host bits are allowed here
-	fmt.Println(validate.IsCIDR()("10.0.0.0"))
+func ExampleCIDR() {
+	fmt.Println(is.CIDR()("10.0.0.0/8"))
+	fmt.Println(is.CIDR()("10.0.0.5/24")) // host bits are allowed here
+	fmt.Println(is.CIDR()("10.0.0.0"))
 	// Output:
 	// <nil>
 	// <nil>
 	// is not a valid CIDR range
 }
 
-func ExampleIsCIDRv4() {
-	fmt.Println(validate.IsCIDRv4()("10.0.0.0/8"))
-	fmt.Println(validate.IsCIDRv4()("10.0.0.5/24")) // not a network address
-	fmt.Println(validate.IsCIDRv4()("2001:db8::/32"))
+func ExampleCIDRv4() {
+	fmt.Println(is.CIDRv4()("10.0.0.0/8"))
+	fmt.Println(is.CIDRv4()("10.0.0.5/24")) // not a network address
+	fmt.Println(is.CIDRv4()("2001:db8::/32"))
 	// Output:
 	// <nil>
 	// is not a valid CIDR(v4) range
 	// is not a valid CIDR(v4) range
 }
 
-func ExampleIsCIDRv6() {
-	fmt.Println(validate.IsCIDRv6()("2001:db8::/32"))
-	fmt.Println(validate.IsCIDRv6()("2001:db8::1/32")) // not a network address
-	fmt.Println(validate.IsCIDRv6()("10.0.0.0/8"))
+func ExampleCIDRv6() {
+	fmt.Println(is.CIDRv6()("2001:db8::/32"))
+	fmt.Println(is.CIDRv6()("2001:db8::1/32")) // not a network address
+	fmt.Println(is.CIDRv6()("10.0.0.0/8"))
 	// Output:
 	// <nil>
 	// is not a valid CIDR(v6) range
 	// is not a valid CIDR(v6) range
 }
 
-func ExampleIsIP() {
-	fmt.Println(validate.IsIP()("10.0.0.1"))
-	fmt.Println(validate.IsIP()("2001:db8::1"))
-	fmt.Println(validate.IsIP()("10.0.0.0/8")) // a prefix is not an address
+func ExampleIP() {
+	fmt.Println(is.IP()("10.0.0.1"))
+	fmt.Println(is.IP()("2001:db8::1"))
+	fmt.Println(is.IP()("10.0.0.0/8")) // a prefix is not an address
 	// Output:
 	// <nil>
 	// <nil>
 	// is not a valid IP address
 }
 
-func ExampleIsIPv4() {
-	fmt.Println(validate.IsIPv4()("10.0.0.1"))
-	fmt.Println(validate.IsIPv4()("::ffff:10.0.0.1")) // v4 in another spelling
-	fmt.Println(validate.IsIPv4()("2001:db8::1"))
+func ExampleIPv4() {
+	fmt.Println(is.IPv4()("10.0.0.1"))
+	fmt.Println(is.IPv4()("::ffff:10.0.0.1")) // v4 in another spelling
+	fmt.Println(is.IPv4()("2001:db8::1"))
 	// Output:
 	// <nil>
 	// <nil>
 	// is not a valid IPv4 address
 }
 
-func ExampleIsIPv6() {
-	fmt.Println(validate.IsIPv6()("2001:db8::1"))
-	fmt.Println(validate.IsIPv6()("10.0.0.1"))
+func ExampleIPv6() {
+	fmt.Println(is.IPv6()("2001:db8::1"))
+	fmt.Println(is.IPv6()("10.0.0.1"))
 	// Output:
 	// <nil>
 	// is not a valid IPv6 address
+}
+
+// requireCheck runs c against in and asserts on the message, where an empty
+// wantErr means the check must pass.
+//
+// A copy of the helper in the parent package's tests. Two call sites is not
+// enough to justify a shared package for eleven lines.
+func requireCheck[T any](t *testing.T, c validate.Check[T], in T, wantErr string) {
+	t.Helper()
+
+	err := c(in)
+	if wantErr == "" {
+		require.NoError(t, err)
+		return
+	}
+
+	require.EqualError(t, err, wantErr)
 }
