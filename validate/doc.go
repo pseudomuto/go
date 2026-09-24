@@ -8,7 +8,7 @@
 //
 //	func (a Address) Validate() error {
 //		return validate.Validate("",
-//			validate.Field("cidr", a.CIDR, validate.IsCIDRv4()),
+//			validate.Field("cidr", a.CIDR, is.CIDRv4()),
 //		)
 //	}
 //
@@ -94,11 +94,19 @@
 // [Error.Namespace] split the path at the last segment for the common case of
 // keying by field name.
 //
+// # Format checks
+//
+// Checks for what a value looks like live in the is subpackage, imported as
+// github.com/pseudomuto/go/validate/is. They are named so the call site reads as a
+// sentence, is.IP() and is.CIDRv4() rather than validate.IsIP() and
+// validate.IsCIDRv4(), which is why they are not here. See that package for the
+// full list.
+//
 // # Writing checks
 //
-// The constructors here ([Required], [GT], [GTE], [LT], [LTE], [Unique], and the
-// net checks [IsIP], [IsIPv4], [IsIPv6], [IsCIDR], [IsCIDRv4], [IsCIDRv6]) cover
-// the common cases, but they are not privileged. A [Check] is any func(T) error,
+// The constructors here ([Required], [GT], [GTE], [LT], [LTE], [Unique]) and those
+// in the is subpackage cover the common cases, but they are not privileged. A
+// [Check] is any func(T) error,
 // so a one-off rule is just a function literal, and a rule you reuse is a
 // function that returns one. There is no registry to add it to.
 //

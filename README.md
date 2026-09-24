@@ -193,13 +193,19 @@ A `Check` is any `func(T) error`. A `Rule` binds values to checks, and `Validate
 | `When` / `Unless` | Guards rules behind a condition                                       |
 | `WhenFunc`        | `When`, but the rule is only built if the condition holds             |
 
-| Check                              | What it does                                                           |
-| ---------------------------------- | ---------------------------------------------------------------------- |
-| `Required`                         | Rejects the zero value                                                 |
-| `GT` / `GTE` / `LT` / `LTE`        | Compares against a bound                                               |
-| `Unique`                           | Rejects a slice holding the same value twice                           |
-| `IsIP` / `IsIPv4` / `IsIPv6`       | Parses as an IP address, optionally pinned to one family               |
-| `IsCIDR` / `IsCIDRv4` / `IsCIDRv6` | Parses as a CIDR prefix; the `vN` forms also require a network address |
+| Check                       | What it does                                 |
+| --------------------------- | -------------------------------------------- |
+| `Required`                  | Rejects the zero value                       |
+| `GT` / `GTE` / `LT` / `LTE` | Compares against a bound                     |
+| `Unique`                    | Rejects a slice holding the same value twice |
+
+Format checks live in a subpackage, `github.com/pseudomuto/go/validate/is`, named so the call site reads as a sentence:
+`validate.Field("addr", u.Addr, is.IP())`.
+
+| `is` check                   | What it does                                                           |
+| ---------------------------- | ---------------------------------------------------------------------- |
+| `IP` / `IPv4` / `IPv6`       | Parses as an IP address, optionally pinned to one family               |
+| `CIDR` / `CIDRv4` / `CIDRv6` | Parses as a CIDR prefix; the `vN` forms also require a network address |
 
 Every failure carries a path, built by prepending one segment per level as it travels back out. Nothing is
 special-cased, which is what makes it predictable:
